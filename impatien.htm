@@ -1,0 +1,370 @@
+<!DOCTYPE HTML>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petit dictionnaire de la poésie : L'impatience | poésie en ligne</title>
+
+<meta name="description" content="Poésie : Trente cinq poèmes, écrits en trente cinq jours, au petit matin, et aussitôt mis en ligne sur le web">
+<meta name="Keywords" content="poème, poeme, poesie, poete, poésie, poète, humeur, amour, tendresse, nostalgie, valence, escandolières, olemps, guy dumoulin, auteur, drome, dictionnaire">
+<meta name="reply-to" content="guydumoulin@hotmail.com">
+<meta name="category" content="Poésie">
+<meta name="author" content="Guy Dumoulin">
+<meta name="owner" content="guydumoulin@hotmail.com">
+<meta name="copyright" content="Guy Dumoulin">
+<meta name="robots" content="all">
+<meta name="revisit-after" content="30 DAYS">
+<meta name="rating" content="General">
+<meta name="distribution" content="global">
+<meta name="Date-Creation-yyyymmdd" content="19990626">
+<meta name="Date-Revision-yyyymmdd" content="20260716">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #1b2a4a;
+        --bg-soft: #22335c;
+        --accent: #e0574a;
+        --accent-soft: #f2a99e;
+        --text: #dfe4ee;
+        --text-dim: #9aa6c2;
+        --card: rgba(255,255,255,0.04);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        background: radial-gradient(circle at top, var(--bg-soft), var(--bg) 65%);
+        font-family: 'Inter', sans-serif;
+        color: var(--text);
+        padding: 48px 20px 80px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .page {
+        max-width: 880px;
+        width: 100%;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 48px;
+    }
+
+    header .eyebrow {
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--accent-soft);
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    header h1 {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+        font-size: 2.6rem;
+        margin: 0;
+        color: #fff;
+        line-height: 1.15;
+    }
+
+    header p {
+        color: var(--text-dim);
+        font-size: 0.95rem;
+        margin-top: 14px;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+
+    nav.rule {
+        height: 1px;
+        width: 60px;
+        background: var(--accent);
+        margin: 22px auto 0;
+        opacity: 0.6;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 420px 420px;
+        gap: 40px;
+        align-items: start;
+    }
+
+    .menu { grid-column: 1; }
+    .content { grid-column: 2; }
+
+    .menu {
+        background: var(--card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 4px 8px;
+    }
+
+    .menu summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        padding: 16px 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        color: #fff;
+    }
+    .menu summary::-webkit-details-marker { display: none; }
+    .menu summary::marker { content: ""; }
+
+    .menu .chevron {
+        color: var(--accent-soft);
+        transition: transform .2s ease;
+        font-size: 0.75rem;
+    }
+    .menu[open] .chevron { transform: rotate(180deg); }
+
+    .menu-list {
+        padding: 2px 6px 14px;
+        max-height: 600px;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px 10px;
+    }
+
+    .menu a {
+        display: block;
+        padding: 7px 14px;
+        font-size: 0.88rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background .15s ease, color .15s ease;
+    }
+
+    .menu a:visited {
+        color: #fff;
+    }
+
+    .menu a:hover {
+        background: rgba(255,255,255,0.06);
+        color: #fff;
+    }
+
+    .menu a.active {
+        color: #fff;
+        background: rgba(224,87,74,0.18);
+        font-weight: 500;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .illustration {
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: var(--card);
+        line-height: 0;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+    }
+
+    .illustration img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    footer {
+        margin-top: 56px;
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        line-height: 1.8;
+    }
+
+    footer a {
+        color: var(--accent-soft);
+        text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    .expo-pill {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 8px 20px;
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        color: #fff;
+        font-size: 0.82rem;
+        text-decoration: none;
+        transition: background .15s ease;
+    }
+    .expo-pill:hover { background: rgba(224,87,74,0.15); }
+
+    @media (min-width: 721px) {
+        .menu summary { pointer-events: none; }
+        .menu .chevron { display: none; }
+        .menu, .content { grid-row: 1; }
+        .menu {
+            height: 360px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .menu summary { padding: 8px 10px; }
+        .menu-list { padding: 2px 6px 6px; }
+        .menu a { padding: 4px 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .illustration {
+            width: 420px;
+            height: 360px;
+            max-width: none;
+        }
+        .illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .layout { grid-template-columns: 1fr; }
+        .menu, .content { grid-column: 1; }
+        .menu-list {
+            max-height: none;
+            overflow: visible;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 2px 8px;
+        }
+        .menu a { padding: 6px 8px; font-size: 0.82rem; }
+        header h1 { font-size: 2rem; }
+    }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+    <header>
+        <div class="eyebrow">Petit dictionnaire de la poésie</div>
+        <h1>L'impatience</h1>
+        <p>Trente-cinq poèmes, écrits en trente-cinq matins, avant de partir au travail — mis en ligne aussitôt.</p>
+        <nav class="rule"></nav>
+    </header>
+
+    <div class="layout">
+        <div class="content">
+            <div class="illustration">
+                <img src="impatienc.jpg" alt="Poème « L’impatience » illustré, sur fond de photo" width="380" height="326">
+            </div>
+
+            <div class="sr-only">
+                <h2>L’impatience</h2>
+                <p>On l’a bien oubliée Dans la liste des vertus<br>
+                    : Elle a un but, Elle sait ce qu’elle veut, Et<br>
+                    comment. Mais pas quand.<br>
+                    Tiens, tout de suite Pourquoi pas ?</p>
+            </div>
+        </div>
+
+        <details class="menu" id="menu-details" open>
+            <summary>
+                <span>Poème suivant</span>
+                <span class="chevron">&#9662;</span>
+            </summary>
+            <nav class="menu-list">
+                <a href="nostalgi.html">La nostalgie</a>
+            <a href="verite.htm">La vérité</a>
+            <a href="credulit.htm">La crédulité</a>
+            <a href="curiosit.htm">La curiosité</a>
+            <a href="impatien.htm" class="active">L'impatience</a>
+            <a href="fantaisi.htm">La fantaisie</a>
+            <a href="index.htm">L'amitié</a>
+            <a href="colere.htm">La colère</a>
+            <a href="courage.htm">Le courage</a>
+            <a href="coquette.htm">La coquetterie</a>
+            <a href="envie.htm">L'envie</a>
+            <a href="gaite.htm">La gaîté</a>
+            <a href="confianc.htm">La confiance</a>
+            <a href="destinat.htm">La destination</a>
+            <a href="bonheur.htm">Le bonheur</a>
+            <a href="respect.htm">Le respect</a>
+            <a href="timidite.htm">La timidité</a>
+            <a href="experien.htm">L'expérience</a>
+            <a href="obeissan.htm">L'obéissance</a>
+            <a href="depart.htm">Le départ</a>
+            <a href="vaillanc.htm">La vaillance</a>
+            <a href="plaisir.htm">Le plaisir</a>
+            <a href="humour.htm">L'humour</a>
+            <a href="retour.htm">Le retour</a>
+            <a href="patience.htm">La patience</a>
+            <a href="passion.htm">La passion</a>
+            <a href="fidelite.htm">La fidélité</a>
+            <a href="absence.htm">L'absence</a>
+            <a href="folie.htm">La folie</a>
+            <a href="seduction.htm">La séduction</a>
+            <a href="ennui.htm">L'ennui</a>
+            <a href="justice.htm">La justice</a>
+            <a href="charite.htm">La charité</a>
+            <a href="tendress.htm">La tendresse</a>
+            <a href="poesie.htm">La poésie</a>
+            </nav>
+        </details>
+    </div>
+
+    <footer>
+        L'auteur : Guy Dumoulin. Ses villes : Valence, Montpellier, Escandolières, Olemps.<br>
+        Ses plaisirs : la Camargue, la mer, la poésie, le temps qui fuit.<br>
+        Mes autres sites : <a href="http://dahu.com.free.fr/" target="_blank">dahu.com.free.fr</a> et <a href="http://participepasse.com.free.fr/" target="_blank">participepasse.com.free.fr</a>
+        <br>
+        <a href="exposition/index.htm" class="expo-pill">Voir mon exposition d'art brut</a>
+    </footer>
+
+</div>
+
+<script>
+(function() {
+    var d = document.getElementById('menu-details');
+    if (!d) return;
+    if (window.matchMedia('(max-width: 720px)').matches) {
+        d.removeAttribute('open');
+    }
+    d.addEventListener('toggle', function() {
+        if (d.open && window.matchMedia('(max-width: 720px)').matches) {
+            setTimeout(function() {
+                d.scrollIntoView({behavior: 'smooth', block: 'start'});
+            }, 50);
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
