@@ -134,11 +134,13 @@ const RADIOS_DE_DEPART = [
              "http://streamer-03.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
              "http://icecast.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg"] },
   { nom: "RMC",             url: "https://audio.bfmtv.com/rmcradio_128.mp3" },
-  { nom: "Europe 1",        url: "https://stream.europe1.fr/europe1.mp3" },
+  { nom: "Europe 1",        url: "https://stream.europe1.fr/europe1.mp3",
+    autres: ["https://europe1.lmn.fm/europe1.mp3"] },
   { nom: "NRJ",             url: "https://streaming.nrjaudio.fm/oumvmk8fnozc?origine=fluxradios" },
   { nom: "Nostalgie",       url: "https://streaming.nrjaudio.fm/oug7girb92oc?origine=fluxradios" },
   { nom: "Chérie FM",       url: "https://streaming.nrjaudio.fm/ouuku85n3nje?origine=fluxradios" },
-  { nom: "RFM",             url: "https://stream.rfm.fr/rfm.mp3" },
+  { nom: "RFM",             url: "https://stream.rfm.fr/rfm.mp3",
+    autres: ["https://rfm.lmn.fm/rfm.mp3"] },
   { nom: "Totem Aveyron",   url: "http://aratotem.ice.infomaniak.ch/aveyron.mp3",
     autres: ["https://aratotem.ice.infomaniak.ch/aveyron.mp3"] }
 ];
@@ -175,6 +177,15 @@ try {
     if (!radios.some(r => r.nom === d.nom || /aratotem[^ ]*aveyron/.test(r.url))) radios.push(d);
     localStorage.setItem(CLE, JSON.stringify(radios));
     localStorage.setItem("mes-radios-ajout-5", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-6")) {
+    ["Europe 1", "RFM"].forEach(nomRadio => {
+      const d = RADIOS_DE_DEPART.find(x => x.nom === nomRadio);
+      const r = radios.find(x => x.nom === nomRadio);
+      if (r && !r.autres) r.autres = d.autres;
+    });
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-6", "1");
   }
 } catch (e) {}
 const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(radios)); } catch (e) {} };
@@ -295,20 +306,35 @@ function arreter() {
   dessiner();
 }
 
+let echecsCors = [];
 function jouer(i) {
   if (courante === i) { arreter(); return; }
-  courante = i; jeton++; modeReel = false; modeEl.textContent = "";
+  courante = i; jeton++; modeReel = false; modeEl.textContent = ""; echecsCors = [];
   const adresses = [radios[i].url].concat(radios[i].autres || []);
+  // 1) chaque adresse avec analyse du son (celles déjà connues comme compatibles d'abord), 2) puis sans analyse
+  const essais = [];
+  if (peutAnalyser) {
+    adresses.filter(u => memoire[u] !== "normal")
+            .sort((p, q) => (memoire[p] === "cors" ? 0 : 1) - (memoire[q] === "cors" ? 0 : 1))
+            .forEach(u => essais.push([u, "cors"]));
+  }
+  adresses.forEach(u => essais.push([u, "normal"]));
   etat.textContent = "Connexion à " + radios[i].nom + "…";
   regler("connexion");
   dessiner();
-  essayer(i, adresses, 0, null, jeton);
+  essayer(i, essais, 0, jeton);
 }
 
-function essayer(i, adresses, k, mode, j) {
+function essayer(i, essais, n, j) {
   if (j !== jeton) return;
-  const url = adresses[k];
-  if (!mode) mode = (peutAnalyser && memoire[url] !== "normal") ? "cors" : "normal";
+  if (n >= essais.length) {
+    connexion = false;
+    etat.textContent = "Cette radio ne répond pas. Vérifiez son adresse dans « Modifier ma liste ».";
+    courante = null; stop.hidden = true; regler("repos"); dessiner();
+    return;
+  }
+  const url = essais[n][0];
+  let mode = essais[n][1];
   if (mode === "cors") {
     try { brancher(); } catch (e) { peutAnalyser = false; mode = "normal"; }
   }
@@ -320,7 +346,9 @@ function essayer(i, adresses, k, mode, j) {
   el.play().then(() => {
     if (j !== jeton) return;
     connexion = false;
-    memoire[url] = mode; sauverMemoire();
+    memoire[url] = mode;
+    if (mode === "normal") echecsCors.forEach(u => { memoire[u] = "normal"; });
+    sauverMemoire();
     modeReel = (mode === "cors"); silence = 0;
     etat.textContent = "En écoute : " + radios[i].nom;
     modeEl.textContent = modeReel ? "Spectre réel du son" : "Animation décorative : cette radio ne permet pas d’analyser le son";
@@ -328,11 +356,8 @@ function essayer(i, adresses, k, mode, j) {
     regler("lecture");
   }).catch(() => {
     if (j !== jeton) return;
-    if (mode === "cors") { essayer(i, adresses, k, "normal", j); return; }
-    if (k + 1 < adresses.length) { essayer(i, adresses, k + 1, null, j); return; }
-    connexion = false;
-    etat.textContent = "Cette radio ne répond pas. Vérifiez son adresse dans « Modifier ma liste ».";
-    courante = null; stop.hidden = true; regler("repos"); dessiner();
+    if (mode === "cors") echecsCors.push(url);
+    essayer(i, essais, n + 1, j);
   });
 }
 
