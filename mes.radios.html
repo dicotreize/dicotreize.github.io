@@ -4,14 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mes radios</title>
-<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --encre:#10222b; --ardoise:#3e5560; --brume:#e9eff1; --filet:#c3d0d5;
-    --ambre:#f0b132; --bleu:#0f6b78;
+    --ambre:#f0b132; --bleu:#0f6b78; --rouge:#a8261d;
     --titre:"Bricolage Grotesque","Atkinson Hyperlegible",Verdana,Geneva,sans-serif;
     --texte:"Atkinson Hyperlegible",Verdana,Geneva,sans-serif;
   }
@@ -53,10 +52,33 @@
   .mini i:nth-child(2) { animation-delay:-.3s; } .mini i:nth-child(3) { animation-delay:-.6s; } .mini i:nth-child(4) { animation-delay:-.15s; }
   @keyframes egaliseur { 0%,100% { transform:scaleY(.3); } 50% { transform:scaleY(1); } }
 
+  .suppr { font:700 1rem var(--texte); padding:0 16px; border:1.5px solid var(--rouge); color:var(--rouge); background:#fff; border-radius:10px; cursor:pointer; }
+  .deplacer { font:700 1rem var(--texte); padding:0 16px; border:1.5px solid var(--bleu); color:var(--bleu); background:#fff; border-radius:10px; cursor:grab; touch-action:none; user-select:none; }
+  .deplacer[hidden] { display:none; }
+  .ligne.glisse { position:relative; z-index:2; background:#fff; box-shadow:0 8px 22px rgba(16,34,43,.28); border-radius:12px; }
+  .ligne.glisse .deplacer { cursor:grabbing; }
+  .echange { display:grid; gap:10px; margin-top:20px; }
+  .echange .rang { display:flex; gap:10px; flex-wrap:wrap; }
+  .echange button { font:700 1rem var(--texte); padding:12px 18px; border:1.5px solid var(--bleu); color:var(--bleu); background:#fff; border-radius:10px; cursor:pointer; }
+  .echange textarea { font:.9rem monospace; padding:10px; border:1.5px solid var(--filet); border-radius:8px; width:100%; }
+  #echange-msg { margin:0; min-height:1.3em; font-size:.95rem; }
+  .suppr[hidden] { display:none; }
 
-  button:focus-visible { outline:3px solid var(--bleu); outline-offset:3px; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline:3px solid var(--bleu); outline-offset:3px; }
   .lecteur button:focus-visible { outline-color:#fff; }
   .radio[aria-pressed="true"]:focus-visible { outline-color:var(--ambre); }
+
+  /* Modification de la liste */
+  details { margin-top:40px; }
+  summary { display:flex; align-items:center; gap:12px; font:700 1.1rem var(--texte); cursor:pointer; padding:8px 0; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"+"; display:grid; place-items:center; width:30px; height:30px; border:1.5px solid var(--ardoise); border-radius:50%; font-size:1.2rem; line-height:1; }
+  details[open] summary::before { content:"–"; }
+  form { display:grid; gap:12px; margin-top:12px; }
+  label { display:grid; gap:5px; font-size:1.05rem; font-weight:700; }
+  input { font:400 1.1rem var(--texte); padding:12px 14px; border:1.5px solid var(--filet); border-radius:10px; background:#fff; color:var(--encre); }
+  form button { font:700 1.1rem var(--texte); padding:14px; border-radius:10px; border:0; background:var(--encre); color:#fff; cursor:pointer; }
+  .aide { font-size:.98rem; line-height:1.55; color:var(--ardoise); max-width:62ch; }
 
   @media (max-width:520px) {
     .poste { width:62px; height:46px; }
@@ -96,10 +118,23 @@
 
   <ul id="liste"></ul>
 
+  <details id="edition">
+    <summary aria-label="Modifier ma liste"></summary>
+    <form id="ajout">
+      <label>Nom de la radio <input id="nom" required placeholder="Ma radio locale"></label>
+      <label>Adresse du flux audio <input id="url" type="url" required placeholder="https://…"></label>
+      <button type="submit">Ajouter à ma liste</button>
+    </form>
+    <div class="echange">
+      <button type="button" id="valider">Valider ma liste</button>
+      <p id="echange-msg" role="status" aria-live="polite"></p>
+    </div>
+    <p class="aide">L’adresse du flux est le lien direct du son (souvent terminé par .mp3, .aac ou semblable), pas l’adresse du site de la radio. Vous pouvez la chercher sur radio-browser.info : cliquez sur la radio, puis copiez l’adresse « URL du flux ». Quand ce panneau est ouvert, deux boutons apparaissent à côté de chaque radio : « Déplacer » (maintenez le bouton enfoncé et faites glisser la radio où vous voulez) et « Retirer ».</p>
+  </details>
 </main>
 
 <script>
-// Liste des radios : à modifier ici, dans le fichier.
+// Liste de départ : à remplacer par vos radios (ou via « Modifier ma liste »).
 const RADIOS_DE_DEPART = [
   { nom: "France Info",     url: "https://icecast.radiofrance.fr/franceinfo-midfi.mp3" },
   { nom: "France Inter",    url: "https://icecast.radiofrance.fr/franceinter-midfi.mp3" },
@@ -119,10 +154,58 @@ const RADIOS_DE_DEPART = [
   { nom: "Chérie FM",       url: "https://streaming.nrjaudio.fm/ouuku85n3nje?origine=fluxradios" },
   { nom: "RFM",             url: "https://stream.rfm.fr/rfm.mp3",
     autres: ["https://rfm.lmn.fm/rfm.mp3"] },
-  { nom: "Totem Aveyron",   url: "https://aratotem.ice.infomaniak.ch/aveyron.mp3",
-    autres: ["http://aratotem.ice.infomaniak.ch/aveyron.mp3"] }
+  { nom: "Totem Aveyron",   url: "http://aratotem.ice.infomaniak.ch/aveyron.mp3",
+    autres: ["https://aratotem.ice.infomaniak.ch/aveyron.mp3"] }
 ];
-const radios = RADIOS_DE_DEPART.slice();
+const CLE = "mes-radios-v1";
+let radios;
+try { radios = JSON.parse(localStorage.getItem(CLE)) || RADIOS_DE_DEPART.slice(); }
+catch (e) { radios = RADIOS_DE_DEPART.slice(); }
+// Migrations uniques (listes déjà enregistrées dans le navigateur)
+try {
+  if (!localStorage.getItem(CLE)) {
+    ["mes-radios-ajout-2", "mes-radios-correctif-3", "mes-radios-correctif-4", "mes-radios-ajout-5", "mes-radios-correctif-6"]
+      .forEach(k => localStorage.setItem(k, "1"));
+  }
+  if (!localStorage.getItem("mes-radios-ajout-2")) {
+    RADIOS_DE_DEPART.forEach(d => { if (!radios.some(r => r.nom === d.nom)) radios.push(d); });
+    localStorage.setItem("mes-radios-ajout-2", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-3")) {
+    RADIOS_DE_DEPART.forEach(d => {
+      if (["RTL", "NRJ", "Nostalgie", "Chérie FM"].includes(d.nom)) {
+        const r = radios.find(x => x.nom === d.nom);
+        if (r) r.url = d.url;
+      }
+    });
+    radios = radios.filter(r => r.url !== "https://aratotem.ice.infomaniak.ch/aratotem-128.mp3");
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-3", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-4")) {
+    const d = RADIOS_DE_DEPART.find(x => x.nom === "RTL");
+    const r = radios.find(x => x.nom === "RTL");
+    if (d) { if (r) { r.url = d.url; r.autres = d.autres; } else { radios.push(d); } }
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-4", "1");
+  }
+  if (!localStorage.getItem("mes-radios-ajout-5")) {
+    const d = RADIOS_DE_DEPART.find(x => x.nom === "Totem Aveyron");
+    if (d && !radios.some(r => r.nom === d.nom || /aratotem[^ ]*aveyron/.test(r.url))) radios.push(d);
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-ajout-5", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-6")) {
+    ["Europe 1", "RFM"].forEach(nomRadio => {
+      const d = RADIOS_DE_DEPART.find(x => x.nom === nomRadio);
+      const r = radios.find(x => x.nom === nomRadio);
+      if (d && r && !r.autres) r.autres = d.autres;
+    });
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-6", "1");
+  }
+} catch (e) {}
+const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(radios)); } catch (e) {} };
 
 const audioN = new Audio();                 // lecture normale
 const audioC = new Audio();                 // lecture avec analyse du son (si la radio l'autorise)
@@ -167,6 +250,7 @@ const lisse = [];
 const liste = document.getElementById("liste");
 const etat = document.getElementById("etat");
 const stop = document.getElementById("stop");
+const edition = document.getElementById("edition");
 const aiguille = document.getElementById("aiguille");
 const onde = document.getElementById("onde");
 const ctx = onde.getContext("2d");
@@ -243,7 +327,12 @@ let echecsCors = [];
 function jouer(i) {
   if (courante === i) { arreter(); return; }
   courante = i; jeton++; modeReel = false; modeEl.textContent = ""; echecsCors = [];
-  const adresses = [radios[i].url].concat(radios[i].autres || []);
+  let adresses = [radios[i].url].concat(radios[i].autres || []);
+  if (location.protocol === "https:") {
+    // une page en https ne peut pas lire un flux en http : on essaie d'abord la version https de l'adresse
+    adresses = adresses.flatMap(u => /^http:\/\//i.test(u) ? [u.replace(/^http:/i, "https:"), u] : [u]);
+    adresses = adresses.filter((u, k) => adresses.indexOf(u) === k);
+  }
   // 1) chaque adresse avec analyse du son (celles déjà connues comme compatibles d'abord), 2) puis sans analyse
   const essais = [];
   if (peutAnalyser) {
@@ -276,8 +365,18 @@ function essayer(i, essais, n, j) {
   autre.pause(); autre.removeAttribute("src");
   actif = el; connexion = true;
   el.src = url;
-  el.play().then(() => {
+  let passe = false, minuteur = null;
+  const suivant = () => {
+    if (passe) return; passe = true; clearTimeout(minuteur);
     if (j !== jeton) return;
+    if (mode === "cors") echecsCors.push(url);
+    essayer(i, essais, n + 1, j);
+  };
+  // l'essai avec analyse du son ne doit pas retarder l'écoute : au bout de 2,5 s on passe à l'essai normal
+  if (mode === "cors") minuteur = setTimeout(suivant, 2500);
+  el.play().then(() => {
+    if (passe || j !== jeton) return;
+    passe = true; clearTimeout(minuteur);
     connexion = false;
     memoire[url] = mode;
     if (mode === "normal") echecsCors.forEach(u => { memoire[u] = "normal"; });
@@ -287,11 +386,7 @@ function essayer(i, essais, n, j) {
     modeEl.textContent = modeReel ? "Spectre réel du son" : "Animation décorative : cette radio ne permet pas d’analyser le son";
     stop.hidden = false;
     regler("lecture");
-  }).catch(() => {
-    if (j !== jeton) return;
-    if (mode === "cors") echecsCors.push(url);
-    essayer(i, essais, n + 1, j);
-  });
+  }).catch(suivant);
 }
 
 function dessiner() {
@@ -307,9 +402,75 @@ function dessiner() {
     }
     b.setAttribute("aria-pressed", String(courante === i));
     b.onclick = () => jouer(i);
-    li.append(b); liste.append(li);
+    const x = document.createElement("button");
+    x.className = "suppr"; x.textContent = "Retirer";
+    x.hidden = !edition.open;
+    x.onclick = () => {
+      if (!confirm("Retirer « " + r.nom + " » de la liste ?")) return;
+      if (courante === i) arreter(); else if (courante > i) courante--;
+      radios.splice(i, 1); sauver(); dessiner();
+    };
+    const d = document.createElement("button");
+    d.className = "deplacer"; d.textContent = "Déplacer";
+    d.title = "Faites glisser, ou utilisez les flèches haut et bas du clavier";
+    d.hidden = !edition.open;
+    d.onpointerdown = e => commencerGlisse(e, li, d);
+    d.onkeydown = e => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+      const j = i + (e.key === "ArrowUp" ? -1 : 1);
+      if (j < 0 || j >= radios.length) return;
+      const cur = courante === null ? null : radios[courante];
+      [radios[i], radios[j]] = [radios[j], radios[i]];
+      if (cur) courante = radios.indexOf(cur);
+      sauver(); dessiner();
+      liste.children[j].querySelector(".deplacer").focus();
+    };
+    li.dataset.i = i;
+    li.append(b, d, x); liste.append(li);
   });
   placerAiguille();
+}
+
+function commencerGlisse(e, li, poignee) {
+  e.preventDefault();
+  poignee.setPointerCapture(e.pointerId);
+  const lignes = [...liste.children];
+  const de = lignes.indexOf(li);
+  const rects = lignes.map(l => l.getBoundingClientRect());
+  const pas = lignes.length > 1 ? rects[1].top - rects[0].top : rects[0].height;
+  const depart = e.clientY;
+  let cible = de;
+  li.classList.add("glisse");
+  lignes.forEach(l => { if (l !== li) l.style.transition = "transform .15s"; });
+
+  const bouger = ev => {
+    const dy = ev.clientY - depart;
+    li.style.transform = "translateY(" + dy + "px)";
+    const centre = rects[de].top + rects[de].height / 2 + dy;
+    cible = 0;
+    rects.forEach((r, j) => { if (j !== de && r.top + r.height / 2 < centre) cible++; });
+    lignes.forEach((l, j) => {
+      if (j === de) return;
+      let decal = 0;
+      if (de < cible && j > de && j <= cible) decal = -pas;
+      if (de > cible && j < de && j >= cible) decal = pas;
+      l.style.transform = decal ? "translateY(" + decal + "px)" : "";
+    });
+  };
+  const finir = () => {
+    poignee.removeEventListener("pointermove", bouger);
+    poignee.removeEventListener("pointerup", finir);
+    poignee.removeEventListener("pointercancel", finir);
+    const cur = courante === null ? null : radios[courante];
+    const [deplacee] = radios.splice(de, 1);
+    radios.splice(cible, 0, deplacee);
+    if (cur) courante = radios.indexOf(cur);
+    sauver(); dessiner();
+  };
+  poignee.addEventListener("pointermove", bouger);
+  poignee.addEventListener("pointerup", finir);
+  poignee.addEventListener("pointercancel", finir);
 }
 
 function fluxInterrompu(ev) {
@@ -322,6 +483,34 @@ function fluxInterrompu(ev) {
 audioN.addEventListener("error", fluxInterrompu);
 audioC.addEventListener("error", fluxInterrompu);
 stop.onclick = arreter;
+edition.addEventListener("toggle", dessiner);
+document.getElementById("ajout").onsubmit = e => {
+  e.preventDefault();
+  radios.push({ nom: nom.value.trim(), url: url.value.trim() });
+  sauver(); e.target.reset(); dessiner();
+};
+const msg = document.getElementById("echange-msg");
+document.getElementById("valider").onclick = async () => {
+  msg.textContent = "Préparation du fichier…";
+  let source;
+  try {
+    const rep = await fetch(location.href, { cache: "no-store" });
+    if (!rep.ok) throw new Error();
+    source = await rep.text();
+  } catch (e) {
+    msg.textContent = "Cette fonction marche depuis la page hébergée en ligne, pas depuis le fichier ouvert sur l’ordinateur.";
+    return;
+  }
+  const modele = /const RADIOS_DE_DEPART = \[[\s\S]*?\];\s*(?=const CLE)/;
+  if (!modele.test(source)) { msg.textContent = "Impossible de préparer le fichier."; return; }
+  const neuf = source.replace(modele, () => "const RADIOS_DE_DEPART = " + JSON.stringify(radios, null, 2) + ";\n");
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([neuf], { type: "text/html" }));
+  lien.download = "mes-radios.html";
+  document.body.append(lien); lien.click(); lien.remove();
+  setTimeout(() => URL.revokeObjectURL(lien.href), 5000);
+  msg.textContent = "Fichier téléchargé : remplacez-le sur votre hébergement.";
+};
 dessiner();
 ajuster();
 </script>
