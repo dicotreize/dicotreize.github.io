@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes radios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --encre:#10222b; --ardoise:#3e5560; --brume:#e9eff1; --filet:#c3d0d5;
+    --ambre:#f0b132; --bleu:#0f6b78; --rouge:#a8261d;
+    --titre:"Bricolage Grotesque","Atkinson Hyperlegible",Verdana,Geneva,sans-serif;
+    --texte:"Atkinson Hyperlegible",Verdana,Geneva,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:28px 18px 64px; background:var(--brume); color:var(--encre); font-family:var(--texte); }
+  main { max-width:720px; margin:0 auto; }
+
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 26px; }
+  h1 { margin:0; font-family:var(--titre); font-weight:700; font-size:clamp(2.1rem,6vw,3rem); letter-spacing:-.025em; line-height:1; }
+  .poste { flex:none; width:84px; height:63px; color:var(--ardoise); opacity:.6; }
+
+  /* Panneau de lecture */
+  .lecteur { background:var(--encre); color:#eaf1f3; border-radius:18px; padding:22px 24px 18px; min-height:196px; }
+  .ligne-etat { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; min-height:52px; }
+  #etat { margin:0; font-size:1.3rem; line-height:1.35; flex:1 1 240px; }
+  #stop { font:700 1.1rem var(--texte); padding:12px 22px; border-radius:12px; border:0; background:var(--ambre); color:var(--encre); cursor:pointer; }
+  #stop:hover { background:#f7c55a; }
+  #stop[hidden] { display:none; }
+  .mode { margin:2px 0 0; min-height:1.3em; font-size:.95rem; color:#9fb3bb; }
+  #onde { display:block; width:100%; height:76px; margin-top:14px; }
+  .cadran { position:relative; height:22px; margin-top:8px;
+    background:
+      repeating-linear-gradient(90deg,#c8d6dc 0 1.5px,transparent 1.5px 50px) left bottom/100% 16px no-repeat,
+      repeating-linear-gradient(90deg,#7f98a2 0 1px,transparent 1px 10px) left bottom/100% 8px no-repeat; }
+  .aiguille { position:absolute; left:50%; bottom:0; width:3px; height:22px; border-radius:2px; background:var(--ambre);
+    transform:translateX(-50%); opacity:0; transition:left .6s cubic-bezier(.3,.7,.2,1), opacity .3s; }
+
+  /* Liste des radios */
+  #liste { margin:26px 0 0; padding:0; list-style:none; border-top:1px solid var(--filet); }
+  .ligne { display:flex; gap:10px; align-items:stretch; }
+  .radio { flex:1; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left;
+    font:600 1.5rem var(--titre); letter-spacing:-.01em; color:var(--encre); background:transparent;
+    padding:18px 20px; border:0; border-bottom:1px solid var(--filet); border-radius:0; cursor:pointer; }
+  .radio:hover { background:#fff; }
+  .radio[aria-pressed="true"] { background:var(--encre); color:#fff; border-radius:12px; border-bottom-color:transparent; }
+  .mini { display:flex; align-items:flex-end; gap:3px; height:20px; flex:none; }
+  .mini i { width:4px; height:100%; border-radius:2px; background:var(--ambre); transform-origin:bottom; transform:scaleY(.35); }
+  body[data-etat="lecture"] .mini i { animation:egaliseur 1s ease-in-out infinite; }
+  .mini i:nth-child(2) { animation-delay:-.3s; } .mini i:nth-child(3) { animation-delay:-.6s; } .mini i:nth-child(4) { animation-delay:-.15s; }
+  @keyframes egaliseur { 0%,100% { transform:scaleY(.3); } 50% { transform:scaleY(1); } }
+
+  .suppr { font:700 1rem var(--texte); padding:0 16px; border:1.5px solid var(--rouge); color:var(--rouge); background:#fff; border-radius:10px; cursor:pointer; }
+  .deplacer { font:700 1rem var(--texte); padding:0 16px; border:1.5px solid var(--bleu); color:var(--bleu); background:#fff; border-radius:10px; cursor:grab; touch-action:none; user-select:none; }
+  .deplacer[hidden] { display:none; }
+  .ligne.glisse { position:relative; z-index:2; background:#fff; box-shadow:0 8px 22px rgba(16,34,43,.28); border-radius:12px; }
+  .ligne.glisse .deplacer { cursor:grabbing; }
+  .echange { display:grid; gap:10px; margin-top:20px; }
+  .echange .rang { display:flex; gap:10px; flex-wrap:wrap; }
+  .echange button { font:700 1rem var(--texte); padding:12px 18px; border:1.5px solid var(--bleu); color:var(--bleu); background:#fff; border-radius:10px; cursor:pointer; }
+  .echange textarea { font:.9rem monospace; padding:10px; border:1.5px solid var(--filet); border-radius:8px; width:100%; }
+  #echange-msg { margin:0; min-height:1.3em; font-size:.95rem; }
+  .suppr[hidden] { display:none; }
+
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline:3px solid var(--bleu); outline-offset:3px; }
+  .lecteur button:focus-visible { outline-color:#fff; }
+  .radio[aria-pressed="true"]:focus-visible { outline-color:var(--ambre); }
+
+  /* Modification de la liste */
+  details { margin-top:40px; }
+  summary { display:flex; align-items:center; gap:12px; font:700 1.1rem var(--texte); cursor:pointer; padding:8px 0; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"+"; display:grid; place-items:center; width:30px; height:30px; border:1.5px solid var(--ardoise); border-radius:50%; font-size:1.2rem; line-height:1; }
+  details[open] summary::before { content:"–"; }
+  form { display:grid; gap:12px; margin-top:12px; }
+  label { display:grid; gap:5px; font-size:1.05rem; font-weight:700; }
+  input { font:400 1.1rem var(--texte); padding:12px 14px; border:1.5px solid var(--filet); border-radius:10px; background:#fff; color:var(--encre); }
+  form button { font:700 1.1rem var(--texte); padding:14px; border-radius:10px; border:0; background:var(--encre); color:#fff; cursor:pointer; }
+  .aide { font-size:.98rem; line-height:1.55; color:var(--ardoise); max-width:62ch; }
+
+  @media (max-width:520px) {
+    .poste { width:62px; height:46px; }
+    .radio { font-size:1.35rem; padding:16px 14px; }
+    .lecteur { padding:18px 18px 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aiguille { transition:none; }
+    body[data-etat="lecture"] .mini i { animation:none; transform:scaleY(.7); }
+  }
+</style>
+</head>
+<body data-etat="repos">
+<main>
+  <header>
+    <h1>Mes radios</h1>
+    <svg class="poste" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M62 16 82 3"/>
+      <rect x="6" y="16" width="84" height="48" rx="9"/>
+      <circle cx="32" cy="40" r="15"/>
+      <path d="M20 34h24M18 40h28M20 46h24"/>
+      <rect x="56" y="26" width="28" height="11" rx="3"/>
+      <path d="M71 28.5v6" stroke-width="2.2"/>
+      <circle cx="64" cy="51" r="4.5"/><circle cx="78" cy="51" r="4.5"/>
+    </svg>
+  </header>
+
+  <section class="lecteur" aria-label="Lecture en cours">
+    <div class="ligne-etat">
+      <p id="etat" role="status" aria-live="polite">Cliquez sur le nom d’une radio.</p>
+      <button id="stop" hidden>Arrêter le son</button>
+    </div>
+    <p id="mode" class="mode"></p>
+    <canvas id="onde" aria-hidden="true"></canvas>
+    <div class="cadran" aria-hidden="true"><div class="aiguille" id="aiguille"></div></div>
+  </section>
+
+  <ul id="liste"></ul>
+
+  <details id="edition">
+    <summary aria-label="Modifier ma liste"></summary>
+    <form id="ajout">
+      <label>Nom de la radio <input id="nom" required placeholder="Ma radio locale"></label>
+      <label>Adresse du flux audio <input id="url" type="url" required placeholder="https://…"></label>
+      <button type="submit">Ajouter à ma liste</button>
+    </form>
+    <div class="echange">
+      <button type="button" id="valider">Valider ma liste</button>
+      <p id="echange-msg" role="status" aria-live="polite"></p>
+    </div>
+    <p class="aide">L’adresse du flux est le lien direct du son (souvent terminé par .mp3, .aac ou semblable), pas l’adresse du site de la radio. Vous pouvez la chercher sur radio-browser.info : cliquez sur la radio, puis copiez l’adresse « URL du flux ». Quand ce panneau est ouvert, deux boutons apparaissent à côté de chaque radio : « Déplacer » (maintenez le bouton enfoncé et faites glisser la radio où vous voulez) et « Retirer ».</p>
+  </details>
+</main>
+
+<script>
+// Liste de départ : à remplacer par vos radios (ou via « Modifier ma liste »).
+const RADIOS_DE_DEPART = [
+  {
+    "nom": "Totem Aveyron",
+    "url": "http://aratotem.ice.infomaniak.ch/aveyron.mp3",
+    "autres": [
+      "https://aratotem.ice.infomaniak.ch/aveyron.mp3"
+    ]
+  },
+  {
+    "nom": "France Info",
+    "url": "https://icecast.radiofrance.fr/franceinfo-midfi.mp3"
+  },
+  {
+    "nom": "France Inter",
+    "url": "https://icecast.radiofrance.fr/franceinter-midfi.mp3"
+  },
+  {
+    "nom": "France Musique",
+    "url": "https://icecast.radiofrance.fr/francemusique-midfi.mp3"
+  },
+  {
+    "nom": "Radio Classique",
+    "url": "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3"
+  },
+  {
+    "nom": "RTL",
+    "url": "https://streamer-03.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
+    "autres": [
+      "https://streamer-01.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
+      "https://streamer-02.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
+      "https://streamer-04.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
+      "http://streamer-03.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg",
+      "http://icecast.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg"
+    ]
+  },
+  {
+    "nom": "Europe 1",
+    "url": "https://stream.europe1.fr/europe1.mp3",
+    "autres": [
+      "https://europe1.lmn.fm/europe1.mp3"
+    ]
+  },
+  {
+    "nom": "NRJ",
+    "url": "https://streaming.nrjaudio.fm/oumvmk8fnozc?origine=fluxradios"
+  },
+  {
+    "nom": "Nostalgie",
+    "url": "https://streaming.nrjaudio.fm/oug7girb92oc?origine=fluxradios"
+  },
+  {
+    "nom": "RMC",
+    "url": "https://audio.bfmtv.com/rmcradio_128.mp3"
+  },
+  {
+    "nom": "Chérie FM",
+    "url": "https://streaming.nrjaudio.fm/ouuku85n3nje?origine=fluxradios"
+  },
+  {
+    "nom": "RFM",
+    "url": "https://stream.rfm.fr/rfm.mp3",
+    "autres": [
+      "https://rfm.lmn.fm/rfm.mp3"
+    ]
+  }
+];
+const CLE = "mes-radios-v1";
+let radios;
+try { radios = JSON.parse(localStorage.getItem(CLE)) || RADIOS_DE_DEPART.slice(); }
+catch (e) { radios = RADIOS_DE_DEPART.slice(); }
+// Migrations uniques (listes déjà enregistrées dans le navigateur)
+try {
+  if (!localStorage.getItem(CLE)) {
+    ["mes-radios-ajout-2", "mes-radios-correctif-3", "mes-radios-correctif-4", "mes-radios-ajout-5", "mes-radios-correctif-6"]
+      .forEach(k => localStorage.setItem(k, "1"));
+  }
+  if (!localStorage.getItem("mes-radios-ajout-2")) {
+    RADIOS_DE_DEPART.forEach(d => { if (!radios.some(r => r.nom === d.nom)) radios.push(d); });
+    localStorage.setItem("mes-radios-ajout-2", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-3")) {
+    RADIOS_DE_DEPART.forEach(d => {
+      if (["RTL", "NRJ", "Nostalgie", "Chérie FM"].includes(d.nom)) {
+        const r = radios.find(x => x.nom === d.nom);
+        if (r) r.url = d.url;
+      }
+    });
+    radios = radios.filter(r => r.url !== "https://aratotem.ice.infomaniak.ch/aratotem-128.mp3");
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-3", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-4")) {
+    const d = RADIOS_DE_DEPART.find(x => x.nom === "RTL");
+    const r = radios.find(x => x.nom === "RTL");
+    if (d) { if (r) { r.url = d.url; r.autres = d.autres; } else { radios.push(d); } }
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-4", "1");
+  }
+  if (!localStorage.getItem("mes-radios-ajout-5")) {
+    const d = RADIOS_DE_DEPART.find(x => x.nom === "Totem Aveyron");
+    if (d && !radios.some(r => r.nom === d.nom || /aratotem[^ ]*aveyron/.test(r.url))) radios.push(d);
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-ajout-5", "1");
+  }
+  if (!localStorage.getItem("mes-radios-correctif-6")) {
+    ["Europe 1", "RFM"].forEach(nomRadio => {
+      const d = RADIOS_DE_DEPART.find(x => x.nom === nomRadio);
+      const r = radios.find(x => x.nom === nomRadio);
+      if (d && r && !r.autres) r.autres = d.autres;
+    });
+    localStorage.setItem(CLE, JSON.stringify(radios));
+    localStorage.setItem("mes-radios-correctif-6", "1");
+  }
+} catch (e) {}
+const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(radios)); } catch (e) {} };
+
+const audioN = new Audio();                 // lecture normale
+const audioC = new Audio();                 // lecture avec analyse du son (si la radio l'autorise)
+audioC.crossOrigin = "anonymous";
+let actif = audioN, jeton = 0;
+let courante = null;
+
+// Analyse du son : essayée d'abord ; si la radio refuse, repli sur la lecture normale
+const reduitMouvement = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let peutAnalyser = !!(window.AudioContext || window.webkitAudioContext) && !reduitMouvement;
+let ctxAudio = null, analyseur = null, donnees = null, modeReel = false, silence = 0;
+let memoire = {};
+try { memoire = JSON.parse(localStorage.getItem("mes-radios-modes")) || {}; } catch (e) {}
+const sauverMemoire = () => { try { localStorage.setItem("mes-radios-modes", JSON.stringify(memoire)); } catch (e) {} };
+function brancher() {
+  if (!ctxAudio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctxAudio = new AC();
+    const source = ctxAudio.createMediaElementSource(audioC);
+    analyseur = ctxAudio.createAnalyser();
+    analyseur.fftSize = 256; analyseur.smoothingTimeConstant = 0.75;
+    source.connect(analyseur); analyseur.connect(ctxAudio.destination);
+    donnees = new Uint8Array(analyseur.frequencyBinCount);
+  }
+  if (ctxAudio.state === "suspended") ctxAudio.resume();
+}
+function spectreActuel(n) {
+  if (!modeReel || !analyseur || reduitMouvement) return null;
+  analyseur.getByteFrequencyData(donnees);
+  let somme = 0; for (let j = 0; j < donnees.length; j++) somme += donnees[j];
+  if (somme > 0) silence = 0; else silence++;
+  if (silence > 180) return null;            // trois secondes de silence total : on revient à l'animation décorative
+  const utile = 90, sortie = [];
+  for (let k = 0; k < n; k++) {
+    const pos = Math.pow(k / n, 1.5) * (utile - 1), b = Math.floor(pos), f = pos - b;
+    const v = (donnees[b] * (1 - f) + donnees[b + 1] * f) / 255;
+    sortie.push(Math.min(1, v * (0.75 + 0.7 * k / n)));
+  }
+  return sortie;
+}
+const lisse = [];
+const liste = document.getElementById("liste");
+const etat = document.getElementById("etat");
+const stop = document.getElementById("stop");
+const edition = document.getElementById("edition");
+const aiguille = document.getElementById("aiguille");
+const onde = document.getElementById("onde");
+const ctx = onde.getContext("2d");
+const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Animation décorative (le navigateur ne permet pas de mesurer le vrai spectre de ces flux)
+let niveau = 0, cible = 0, tourne = false;
+const debut = performance.now();
+function ajuster() {
+  const d = window.devicePixelRatio || 1;
+  onde.width = Math.round(onde.clientWidth * d);
+  onde.height = Math.round(onde.clientHeight * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  rendre((performance.now() - debut) / 1000);
+}
+function rendre(t) {
+  const L = onde.clientWidth, H = onde.clientHeight;
+  ctx.clearRect(0, 0, L, H);
+  const pas = 9, n = Math.floor((L + 5) / pas), x0 = (L - (n * pas - 5)) / 2, cy = H / 2;
+  ctx.fillStyle = "#f0b132";
+  ctx.globalAlpha = 0.3 + 0.7 * Math.min(1, niveau);
+  const sp = niveau > 0.5 ? spectreActuel(n) : null;
+  for (let k = 0; k < n; k++) {
+    let h;
+    if (sp) {
+      lisse[k] = (lisse[k] || 0) * 0.5 + sp[k] * 0.5;
+      h = Math.max(3, Math.pow(lisse[k], 1.3) * (H - 6));
+    } else {
+      const v = (Math.sin(k * 0.23 + t * 1.7) + 0.7 * Math.sin(k * 0.51 - t * 2.6) + 0.5 * Math.sin(k * 0.11 + t * 0.9)) / 2.2;
+      const env = 0.4 + 0.6 * Math.sin(Math.PI * (k + 0.5) / n);
+      h = Math.max(3, niveau * env * (0.35 + 0.65 * (v + 1) / 2) * (H - 6));
+    }
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x0 + k * pas, cy - h / 2, 4, h, 2); else ctx.rect(x0 + k * pas, cy - h / 2, 4, h);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function boucle(now) {
+  niveau += (cible - niveau) * 0.08;
+  if (Math.abs(cible - niveau) < 0.004) niveau = cible;
+  rendre((now - debut) / 1000);
+  if (cible === 0 && niveau === 0) { tourne = false; return; }
+  requestAnimationFrame(boucle);
+}
+function regler(e) {
+  document.body.dataset.etat = e;
+  cible = { repos: 0, connexion: 0.28, lecture: 1 }[e];
+  if (reduit) { niveau = cible; rendre(1.3); return; }
+  if (!tourne) { tourne = true; requestAnimationFrame(boucle); }
+}
+function placerAiguille() {
+  if (courante === null) { aiguille.style.opacity = 0; return; }
+  aiguille.style.left = ((courante + 0.5) / radios.length * 100) + "%";
+  aiguille.style.opacity = 1;
+}
+window.addEventListener("resize", ajuster);
+
+let connexion = false;
+const modeEl = document.getElementById("mode");
+function coupler() {
+  [audioN, audioC].forEach(el => { el.pause(); el.removeAttribute("src"); el.load(); });
+}
+function arreter() {
+  jeton++; coupler();
+  courante = null; connexion = false; modeReel = false; stop.hidden = true;
+  modeEl.textContent = "";
+  etat.textContent = "Son arrêté.";
+  regler("repos");
+  dessiner();
+}
+
+let echecsCors = [];
+function jouer(i) {
+  if (courante === i) { arreter(); return; }
+  courante = i; jeton++; modeReel = false; modeEl.textContent = ""; echecsCors = [];
+  let adresses = [radios[i].url].concat(radios[i].autres || []);
+  if (location.protocol === "https:") {
+    // une page en https ne peut pas lire un flux en http : on essaie d'abord la version https de l'adresse
+    adresses = adresses.flatMap(u => /^http:\/\//i.test(u) ? [u.replace(/^http:/i, "https:"), u] : [u]);
+    adresses = adresses.filter((u, k) => adresses.indexOf(u) === k);
+  }
+  // 1) chaque adresse avec analyse du son (celles déjà connues comme compatibles d'abord), 2) puis sans analyse
+  const essais = [];
+  if (peutAnalyser) {
+    adresses.filter(u => memoire[u] !== "normal")
+            .sort((p, q) => (memoire[p] === "cors" ? 0 : 1) - (memoire[q] === "cors" ? 0 : 1))
+            .forEach(u => essais.push([u, "cors"]));
+  }
+  adresses.forEach(u => essais.push([u, "normal"]));
+  etat.textContent = "Connexion à " + radios[i].nom + "…";
+  regler("connexion");
+  dessiner();
+  essayer(i, essais, 0, jeton);
+}
+
+function essayer(i, essais, n, j) {
+  if (j !== jeton) return;
+  if (n >= essais.length) {
+    connexion = false;
+    etat.textContent = "Cette radio ne répond pas. Vérifiez son adresse dans « Modifier ma liste ».";
+    courante = null; stop.hidden = true; regler("repos"); dessiner();
+    return;
+  }
+  const url = essais[n][0];
+  let mode = essais[n][1];
+  if (mode === "cors") {
+    try { brancher(); } catch (e) { peutAnalyser = false; mode = "normal"; }
+  }
+  const el = mode === "cors" ? audioC : audioN;
+  const autre = mode === "cors" ? audioN : audioC;
+  autre.pause(); autre.removeAttribute("src");
+  actif = el; connexion = true;
+  el.src = url;
+  let passe = false, minuteur = null;
+  const suivant = () => {
+    if (passe) return; passe = true; clearTimeout(minuteur);
+    if (j !== jeton) return;
+    if (mode === "cors") echecsCors.push(url);
+    essayer(i, essais, n + 1, j);
+  };
+  // l'essai avec analyse du son ne doit pas retarder l'écoute : au bout de 2,5 s on passe à l'essai normal
+  if (mode === "cors") minuteur = setTimeout(suivant, 2500);
+  el.play().then(() => {
+    if (passe || j !== jeton) return;
+    passe = true; clearTimeout(minuteur);
+    connexion = false;
+    memoire[url] = mode;
+    if (mode === "normal") echecsCors.forEach(u => { memoire[u] = "normal"; });
+    sauverMemoire();
+    modeReel = (mode === "cors"); silence = 0;
+    etat.textContent = "En écoute : " + radios[i].nom;
+    modeEl.textContent = modeReel ? "Spectre réel du son" : "Animation décorative : cette radio ne permet pas d’analyser le son";
+    stop.hidden = false;
+    regler("lecture");
+  }).catch(suivant);
+}
+
+function dessiner() {
+  liste.innerHTML = "";
+  radios.forEach((r, i) => {
+    const li = document.createElement("li"); li.className = "ligne";
+    const b = document.createElement("button");
+    b.className = "radio";
+    const nomRadio = document.createElement("span"); nomRadio.textContent = r.nom; b.append(nomRadio);
+    if (courante === i) {
+      const m = document.createElement("span"); m.className = "mini"; m.setAttribute("aria-hidden", "true");
+      m.innerHTML = "<i></i><i></i><i></i><i></i>"; b.append(m);
+    }
+    b.setAttribute("aria-pressed", String(courante === i));
+    b.onclick = () => jouer(i);
+    const x = document.createElement("button");
+    x.className = "suppr"; x.textContent = "Retirer";
+    x.hidden = !edition.open;
+    x.onclick = () => {
+      if (!confirm("Retirer « " + r.nom + " » de la liste ?")) return;
+      if (courante === i) arreter(); else if (courante > i) courante--;
+      radios.splice(i, 1); sauver(); dessiner();
+    };
+    const d = document.createElement("button");
+    d.className = "deplacer"; d.textContent = "Déplacer";
+    d.title = "Faites glisser, ou utilisez les flèches haut et bas du clavier";
+    d.hidden = !edition.open;
+    d.onpointerdown = e => commencerGlisse(e, li, d);
+    d.onkeydown = e => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+      const j = i + (e.key === "ArrowUp" ? -1 : 1);
+      if (j < 0 || j >= radios.length) return;
+      const cur = courante === null ? null : radios[courante];
+      [radios[i], radios[j]] = [radios[j], radios[i]];
+      if (cur) courante = radios.indexOf(cur);
+      sauver(); dessiner();
+      liste.children[j].querySelector(".deplacer").focus();
+    };
+    li.dataset.i = i;
+    li.append(b, d, x); liste.append(li);
+  });
+  placerAiguille();
+}
+
+function commencerGlisse(e, li, poignee) {
+  e.preventDefault();
+  poignee.setPointerCapture(e.pointerId);
+  const lignes = [...liste.children];
+  const de = lignes.indexOf(li);
+  const rects = lignes.map(l => l.getBoundingClientRect());
+  const pas = lignes.length > 1 ? rects[1].top - rects[0].top : rects[0].height;
+  const depart = e.clientY;
+  let cible = de;
+  li.classList.add("glisse");
+  lignes.forEach(l => { if (l !== li) l.style.transition = "transform .15s"; });
+
+  const bouger = ev => {
+    const dy = ev.clientY - depart;
+    li.style.transform = "translateY(" + dy + "px)";
+    const centre = rects[de].top + rects[de].height / 2 + dy;
+    cible = 0;
+    rects.forEach((r, j) => { if (j !== de && r.top + r.height / 2 < centre) cible++; });
+    lignes.forEach((l, j) => {
+      if (j === de) return;
+      let decal = 0;
+      if (de < cible && j > de && j <= cible) decal = -pas;
+      if (de > cible && j < de && j >= cible) decal = pas;
+      l.style.transform = decal ? "translateY(" + decal + "px)" : "";
+    });
+  };
+  const finir = () => {
+    poignee.removeEventListener("pointermove", bouger);
+    poignee.removeEventListener("pointerup", finir);
+    poignee.removeEventListener("pointercancel", finir);
+    const cur = courante === null ? null : radios[courante];
+    const [deplacee] = radios.splice(de, 1);
+    radios.splice(cible, 0, deplacee);
+    if (cur) courante = radios.indexOf(cur);
+    sauver(); dessiner();
+  };
+  poignee.addEventListener("pointermove", bouger);
+  poignee.addEventListener("pointerup", finir);
+  poignee.addEventListener("pointercancel", finir);
+}
+
+function fluxInterrompu(ev) {
+  if (courante !== null && !connexion && ev.target === actif) {
+    etat.textContent = "Le flux s’est interrompu. Cliquez à nouveau sur la radio.";
+    modeEl.textContent = ""; modeReel = false; jeton++;
+    courante = null; stop.hidden = true; regler("repos"); dessiner();
+  }
+}
+audioN.addEventListener("error", fluxInterrompu);
+audioC.addEventListener("error", fluxInterrompu);
+stop.onclick = arreter;
+edition.addEventListener("toggle", dessiner);
+document.getElementById("ajout").onsubmit = e => {
+  e.preventDefault();
+  radios.push({ nom: nom.value.trim(), url: url.value.trim() });
+  sauver(); e.target.reset(); dessiner();
+};
+const msg = document.getElementById("echange-msg");
+document.getElementById("valider").onclick = async () => {
+  msg.textContent = "Préparation du fichier…";
+  let source;
+  try {
+    const rep = await fetch(location.href, { cache: "no-store" });
+    if (!rep.ok) throw new Error();
+    source = await rep.text();
+  } catch (e) {
+    msg.textContent = "Cette fonction marche depuis la page hébergée en ligne, pas depuis le fichier ouvert sur l’ordinateur.";
+    return;
+  }
+  const modele = /const RADIOS_DE_DEPART = \[[\s\S]*?\];\s*(?=const CLE)/;
+  if (!modele.test(source)) { msg.textContent = "Impossible de préparer le fichier."; return; }
+  const neuf = source.replace(modele, () => "const RADIOS_DE_DEPART = " + JSON.stringify(radios, null, 2) + ";\n");
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([neuf], { type: "text/html" }));
+  lien.download = "mes-radios.html";
+  document.body.append(lien); lien.click(); lien.remove();
+  setTimeout(() => URL.revokeObjectURL(lien.href), 5000);
+  msg.textContent = "Fichier téléchargé : remplacez-le sur votre hébergement.";
+};
+dessiner();
+ajuster();
+</script>
+</body>
+</html>
